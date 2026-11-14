@@ -1,6 +1,6 @@
 # Train Ticket Graph Query API
 ## Overview
-This project implements a REST API for finding and filtering paths in a graph of Train Ticket microservices.
+This project implements a REST API in Python for finding and filtering paths in a graph of Train Ticket microservices.
 
 The API identifies all possible simple paths between services and supports filtering based on public entry points, sink nodes (RDS/SQL), and vulnerabilities along a path.
 
@@ -8,12 +8,12 @@ The results are returned as JSON containing the matching paths, nodes, and edges
 
 ## Implementation Approach
 ### Graph Representation
-The JSON data is loaded into an adjacency list which represent the directed graph, along with a separate dictionary containing each node's metadata.
+The JSON data is loaded into an adjacency list representing the directed graph, along with a separate dictionary containing each node's properties.
 This allows efficient access to neighboring nodes while finding paths and also to the node properties when applying filters.
 ### Path Discovery
 All possible simple paths are found by using Depth-First Search (DFS) with backtracking.
 The search starts from each node and explores all reachable paths containing at least two nodes.
-To ensure that the paths are simple and don't have cycles, we use a set to track the nodes already visited in the current path. A set was chosen because it allows efficient membership checks in O(1) average time.
+To ensure that paths remain simple and do not contain repeated nodes, we use a set to track the nodes already visited in the current path. A set was chosen because it allows efficient membership checks in O(1) average time.
 
 When the public filter is applied, the search starts only from publicly exposed nodes.
 This reduces both runtime and memory usage by avoiding the search and storage of paths that would be filtered out later, which can be especially helpful in large graphs.
@@ -23,6 +23,9 @@ Each filter has its own function that checks whether a path meets the required c
 
 Users can apply filters individually, combine multiple filters, or retrieve all paths without any filter.
 To make the solution easy to extend, adding a new filter only requires defining a new function and adding it to the dictionary, without changing the existing filtering logic.
+### Error Handling
+The API validates the requested filters before processing the query. If an unknown filter is provided, it returns an HTTP 400 (Bad Request) response with a message indicating the invalid filter.
+
 
 ## API Usage
 ### Endpoint
@@ -31,7 +34,7 @@ The API provides a single endpoint:
 
 The endpoint accepts an optional `filters` query parameter. If no filters are provided, all paths are returned.
 ### Filters
-Multiple filters can be provided by repeating the filters query parameter in the URL.
+Multiple filters can be provided by repeating the `filters` query parameter in the URL.
 When multiple filters are provided, a path must satisfy all selected conditions.
 
 #### Examples
@@ -92,7 +95,7 @@ Paths can end at any node, even if that node has outgoing edges, meaning that sh
 - **Invalid and duplicate edges:** Edges referencing nodes that do not exist in the input data are ignored. Duplicate edges are also ignored when building the graph.
 
 ## Setup & Testing
-### Insrallation
+### Installation
 - Requires Python 3.10 or newer.
 - Create and activate a virtual environment (Windows Command Prompt):
 ```bash
@@ -113,7 +116,7 @@ python -m uvicorn main:app --port 8765
 - FastAPI also provides interactive API documentation at http://127.0.0.1:8765/docs, where you can test the endpoint directly.
 
 ### Running Tests
-- The project contain a test file. 
+- The project contains a test file. 
 - The tests cover path discovery, cycles, filtering, API responses, and edge cases.
 Run the tests with:
 ```bash
@@ -128,3 +131,5 @@ The "public" filter is applied before starting DFS to reduce the number of paths
 
 Since the API currently generates and stores all discovered paths before filtering, large graphs may require significant runtime and memory.
 
+Possible improvements, such as allowing users to set a maximum path length or limit the number of results, could reduce runtime and memory usage for larger graphs if these limits are applied during the search.
+We could also check the sink and vulnerable filters during DFS instead of checking them afterward. This could reduce the amount of data we need to store and avoid checking the same conditions multiple times.

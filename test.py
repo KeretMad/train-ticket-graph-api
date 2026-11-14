@@ -1,17 +1,11 @@
-#import json
-#from urllib.request import urlopen
-#from urllib.error import HTTPError
-from graph import load_graph,find_all_paths,paths_to_graph,path_with_vuln,path_starts_public,path_ends_sink,build_graph
 from fastapi.testclient import TestClient
 from main import app
-
+from graph import load_graph,find_all_paths,paths_to_graph,path_with_vuln,path_starts_public,path_ends_sink,build_graph
 
 #API response
 client=TestClient(app)
 response=client.get("/routes")
 data=response.json()
-#with urlopen("http://127.0.0.1:8765/routes") as response:
-#    data=json.load(response)
 
 paths=data["paths"]
 edges=data["edges"]
@@ -94,8 +88,6 @@ print("Test 5 passed: DFS handle with cycles")
 filter_names=["public","sink","vulnerable"]
 for filter_name in filter_names:
     url = f"http://127.0.0.1:8765/routes?filters={filter_name}"
-    #with urlopen(url) as response:
-    #    data=json.load(response)
     response=client.get(url)
     data=response.json()
     filtered_paths=data["paths"]
@@ -135,8 +127,6 @@ for filter_name in filter_names:
                     break
     #get filters
     url = f"http://127.0.0.1:8765/routes?filters={filter_name}"
-    #with urlopen(url) as response:
-    #    data=json.load(response)
     response=client.get(url)
     data=response.json()
     actual_paths=data["paths"]
@@ -160,8 +150,6 @@ for comb in combinations:
             url += f"?filters={filter_name}"
         else:
             url += f"&filters={filter_name}"
-    #with urlopen(url) as response:
-    #    data=json.load(response)
     response=client.get(url)
     data=response.json()
     actual_paths=data["paths"]
@@ -192,9 +180,6 @@ for comb in combinations:
 
 #Test 9: Empty result
 url = "http://127.0.0.1:8765/routes?filters=public&filters=sink"
-#with urlopen(url) as response:
-#    data=json.load(response)
-#    status_code=response.status
 response=client.get(url)
 data=response.json()
 status_code=response.status_code
@@ -220,18 +205,9 @@ for filters in invalid_filters:
     assert response.status_code==400, f"Expected 400 instead of {response.status_code}"
     data=response.json()
     assert "Unknown filter:" in data["detail"], f"Unexpected error message: {data["detail"]}"
-    # try:
-    #     with urlopen(url) as response:
-    #         assert False, f"Expected HTTP 400 for {url}"
-    # except HTTPError as error:
-    #     assert error.code==400, f"Expected 400 instead of {error.code}"
-    #     data=json.load(error)
-    #     assert "Unknown filter:" in data["detail"], f"Unexpected error message: {data['detail']}"
 print("Test 10 passed: All invalid filters were rejected")
 
 #Test 11: validate response structure
-#with urlopen("http://127.0.0.1:8765/routes") as response:
-#    data = json.load(response)
 url="http://127.0.0.1:8765/routes"
 response=client.get(url)
 data=response.json()
