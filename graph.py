@@ -13,7 +13,7 @@ def build_graph(nodes,edges):
         targets=edge["to"]
         if isinstance(targets,str): #deal with targets which given as a string and not list
             targets=[targets]
-        #deal with edegs onto none existing nodes - as an assumption we will ignore them
+        #deal with edges onto nonexistent nodes - as an assumption we will ignore them
         if source not in graph:
             continue
         for target in targets:
@@ -62,24 +62,6 @@ def path_with_vuln(path,node_info):
 #define filters
 Filters = {"public":path_starts_public,"sink":path_ends_sink,"vulnerable":path_with_vuln}
 
-#Find paths from A to B using DFS
-# def find_paths(graph,start,end):
-#     if start not in graph or end not in graph:
-#         return []
-#
-#     results=[]
-#     path=[]
-#     def dfs(curr):
-#         path.append(curr)
-#         if curr == end:
-#             results.append(path.copy())
-#         else:
-#             for neighbor in graph[curr]:
-#                 if neighbor not in path: #prevent circles
-#                     dfs(neighbor)
-#         path.pop()
-#     dfs(start)
-#     return results
 
 #Find all paths - we will handle the case when "public" filter is on differently in order to improve the efficiency
 def find_all_paths(graph, node_info=None, public_only=False):
@@ -93,7 +75,7 @@ def find_all_paths(graph, node_info=None, public_only=False):
             results.append(path.copy())
 
         for neighbor in graph[curr]: #prevent circles
-            if neighbor not in visited: #we use set to make this check in O(1)
+            if neighbor not in visited: #we use set to check this in O(1)
                 dfs(neighbor)
         path.pop()
         visited.remove(curr)

@@ -11,7 +11,7 @@ The results are returned as JSON containing the matching paths, nodes, and edges
 The JSON data is loaded into an adjacency list representing the directed graph, along with a separate dictionary containing each node's properties.
 This allows efficient access to neighboring nodes while finding paths and also to the node properties when applying filters.
 ### Path Discovery
-All possible simple paths are found by using Depth-First Search (DFS) with backtracking.
+All possible simple paths are found using Depth-First Search (DFS) with backtracking.
 The search starts from each node and explores all reachable paths containing at least two nodes.
 To ensure that paths remain simple and do not contain repeated nodes, we use a set to track the nodes already visited in the current path. A set was chosen because it allows efficient membership checks in O(1) average time.
 
@@ -96,7 +96,7 @@ Paths can end at any node, even if that node has outgoing edges, meaning that sh
 
 ## Setup & Testing
 ### Installation
-- Requires Python 3.10 or newer.
+- Recommended Python version: 3.12.1 (tested)
 - Create and activate a virtual environment (Windows Command Prompt):
 ```bash
 python -m venv .venv
@@ -127,9 +127,9 @@ python test.py
 ## Performance & Limitations
 Finding all simple paths can be computationally expensive, as the number of possible paths may grow exponentially with the size of the graph.
 
-The "public" filter is applied before starting DFS to reduce the number of paths explored and stored. But, the "sink" and "vulnerable" filters are applied after path discovery, meaning they do not reduce the number of paths generated during the search.
+The `public` filter is applied before starting DFS to reduce the number of paths explored and stored. However, the `sink` and `vulnerable` filters are applied after path discovery, meaning they do not reduce the number of paths generated during the search.
 
-Since the API currently generates and stores all discovered paths before filtering, large graphs may require significant runtime and memory.
+Since the API stores and discovered paths before applying the remaining filters, large graphs may require significant runtime and memory.
 
 Possible improvements, such as allowing users to set a maximum path length or limit the number of results, could reduce runtime and memory usage for larger graphs if these limits are applied during the search.
-We could also check the sink and vulnerable filters during DFS instead of checking them afterward. This could reduce the amount of data we need to store and avoid checking the same conditions multiple times.
+We could also check the `sink` and `vulnerable` filters during DFS instead of checking them afterward. This could reduce the amount of data we need to store and avoid checking the same conditions multiple times.

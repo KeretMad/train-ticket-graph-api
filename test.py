@@ -33,7 +33,7 @@ print("Test 2 passed: No repeated nodes")
 
 #Test 3: no duplicate paths
 unique_paths={tuple(path) for path in paths}
-assert len(paths)==len(unique_paths),"we have some duplicate paths"
+assert len(paths)==len(unique_paths),"Duplicate paths found"
 print("Test 3 passed: No duplicate paths")
 
 #Test 4: check DFS results
@@ -57,7 +57,7 @@ expected_paths = [
 ]
 actual_paths=find_all_paths(small_graph)
 assert {tuple(path) for path in actual_paths}=={
-    tuple(path) for path in expected_paths},"DFS is not good"
+    tuple(path) for path in expected_paths},"DFS returned incorrect paths"
 assert len(actual_paths)==len(expected_paths),"DFS output has missing/duplicate paths"
 print("Test 4 passed: DFS found all expected paths")
 
@@ -82,12 +82,12 @@ expected_cycle_paths = [
 actual_cycle_paths=find_all_paths(cycle_graph)
 assert {tuple(p) for p in actual_cycle_paths}=={tuple(p) for p in expected_cycle_paths}, "DFS failed on graph with cycles"
 assert len(actual_cycle_paths)==len(expected_cycle_paths), "DFS returned duplicate or missing paths"
-print("Test 5 passed: DFS handle with cycles")
+print("Test 5 passed: DFS handles cycles")
 
 #Test 6: validate filters
 filter_names=["public","sink","vulnerable"]
 for filter_name in filter_names:
-    url = f"http://127.0.0.1:8765/routes?filters={filter_name}"
+    url = f"/routes?filters={filter_name}"
     response=client.get(url)
     data=response.json()
     filtered_paths=data["paths"]
@@ -126,7 +126,7 @@ for filter_name in filter_names:
                     expected_paths.append(path)
                     break
     #get filters
-    url = f"http://127.0.0.1:8765/routes?filters={filter_name}"
+    url = f"/routes?filters={filter_name}"
     response=client.get(url)
     data=response.json()
     actual_paths=data["paths"]
@@ -144,13 +144,10 @@ combinations = [
     ["public", "sink", "vulnerable"]
 ]
 for comb in combinations:
-    url = "http://127.0.0.1:8765/routes"
+    params=[]
     for filter_name in comb:
-        if "?" not in url:
-            url += f"?filters={filter_name}"
-        else:
-            url += f"&filters={filter_name}"
-    response=client.get(url)
+        params.append(("filters",filter_name))
+    response=client.get("/routes",params=params)
     data=response.json()
     actual_paths=data["paths"]
     expected_paths=[]
@@ -178,12 +175,12 @@ for comb in combinations:
     assert len(actual_paths) == len(expected_paths),f"Duplicate paths for {comb}"
     print (f"Test 8 passed:{comb}")
 
-#Test 9: Empty result
-url = "http://127.0.0.1:8765/routes?filters=public&filters=sink"
+#Test 9: Empty result - for case of public and sink filters according to the given JSON
+url = "/routes?filters=public&filters=sink"
 response=client.get(url)
 data=response.json()
 status_code=response.status_code
-assert status_code==200, "Wrong code"
+assert status_code==200, "Wrong code, expected status code 200"
 assert data["nodes"]==[], "Nodes should be empty"
 assert data["edges"]==[], "Edges should be empty"
 assert data["paths"]==[], "Paths should be empty"
@@ -204,12 +201,11 @@ for filters in invalid_filters:
     response=client.get("/routes",params=params)
     assert response.status_code==400, f"Expected 400 instead of {response.status_code}"
     data=response.json()
-    assert "Unknown filter:" in data["detail"], f"Unexpected error message: {data["detail"]}"
+    assert "Unknown filter:" in data["detail"], f"Unexpected error message: {data['detail']}"
 print("Test 10 passed: All invalid filters were rejected")
 
 #Test 11: validate response structure
-url="http://127.0.0.1:8765/routes"
-response=client.get(url)
+response=client.get("/routes")
 data=response.json()
 
 paths = data["paths"]
@@ -227,6 +223,7 @@ actual_nodes = set()
 actual_edges = set()
 for node in nodes:
     actual_nodes.add(node["name"])
+    assert node == node_info[node["name"]], f"Node properties do not match the original data: {node['name']}"
 for edge in edges:
     actual_edges.add((edge["from"], edge["to"]))
 assert expected_nodes == actual_nodes, "Nodes do not match the paths"
@@ -270,7 +267,7 @@ assert test_graph == {
 }, "Invalid or duplicate edges were not handled correctly"
 print("Test 13 passed: Invalid and duplicate edges handled correctly")
 
-#Test 14: edges to few targets
+#Test 14: edges with multiple targets
 test_nodes = [
     {"name": "A"},
     {"name": "B"},
