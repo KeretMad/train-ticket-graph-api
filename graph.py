@@ -1,14 +1,15 @@
 import json
 from pathlib import Path
 
+#Build graph from data
 def build_graph(nodes,edges):
     graph={}
     node_info={}
-    for node in nodes:  #for each node we will add node name with an empty list of potential edges
+    for node in nodes:  #for each node we will add the name of the node with an empty list of potential edges
         name=node["name"]
         graph[name]=[]
         node_info[name]=node
-    for edge in edges: #extract from each edge the source and the targets (few edges from the same source)
+    for edge in edges: #extract from each edge the source and the targets
         source=edge["from"]
         targets=edge["to"]
         if isinstance(targets,str): #deal with targets which given as a string and not list
@@ -21,6 +22,7 @@ def build_graph(nodes,edges):
                 graph[source].append(target)
     return graph,node_info
 
+#Load graph from the given JSON
 def load_graph():
     file_path=Path(__file__).parent/"data.json"
     with open(file_path,"r",encoding="utf-8") as file:
@@ -59,11 +61,11 @@ def path_with_vuln(path,node_info):
             return True
     return False
 
-#define filters
+#Define filters
 Filters = {"public":path_starts_public,"sink":path_ends_sink,"vulnerable":path_with_vuln}
 
 
-#Find all paths - we will handle the case when "public" filter is on differently in order to improve the efficiency
+#Find all paths - we will handle the case when "public" filter is on differently, in order to improve the efficiency
 def find_all_paths(graph, node_info=None, public_only=False):
     results=[]
     path=[]
@@ -86,7 +88,7 @@ def find_all_paths(graph, node_info=None, public_only=False):
         dfs(node)
     return results
 
-#check if path passes all the filters
+#Check if path passes all the filters
 def pass_filters(path,node_info,filters_list):
     for filter_name in filters_list:
         filter_func=Filters[filter_name]
@@ -94,7 +96,7 @@ def pass_filters(path,node_info,filters_list):
             return False
     return True
 
-#check all the relevant paths by the required filters
+#Check all the relevant paths by the required filters
 def final_routes(graph,node_info,filters_list):
     relevant_paths=[]
     public_only = False
@@ -106,7 +108,7 @@ def final_routes(graph,node_info,filters_list):
             relevant_paths.append(path)
     return relevant_paths
 
-#convert the relevant paths to a graph structure
+#Convert the relevant paths to a graph structure
 def paths_to_graph(paths,node_info):
     unique_nodes=set()
     unique_edges=set()
